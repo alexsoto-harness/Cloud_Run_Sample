@@ -14,6 +14,7 @@ service:
                 spec:
                   connectorRef: alexsotoharness
                   repoName: alexsoto-harness/Cloud_Run_Sample
+                  gitFetchType: Branch
                   branch: main
                   paths:
                     - harness-cd-pipeline/manifest.yaml
@@ -23,11 +24,12 @@ service:
           sources:
             - spec:
                 connectorRef: account.GCP_Sales_Admin
-                imagePath: gcrdemo
-                tag: <+input>
+                repositoryType: docker
+                project: sales-209522
                 region: northamerica-northeast2
                 repositoryName: soto-gar
-                project: sales-209522
+                package: gcrdemo
+                version: <+input>
               identifier: artifact_gcr
               type: GoogleArtifactRegistry
   gitOpsEnabled: false
