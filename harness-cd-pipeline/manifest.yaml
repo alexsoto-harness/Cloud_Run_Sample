@@ -5,6 +5,8 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: gcrdemo
+  labels:
+    owner: soto
   annotations:
     run.googleapis.com/minScale: '2'
 spec:

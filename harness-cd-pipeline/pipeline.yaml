@@ -68,6 +68,8 @@ pipeline:
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
+                              tags:
+                                - stable
                           image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                         timeout: 10m
                   name: Google Cloud Run Step Group
