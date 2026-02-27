@@ -43,7 +43,7 @@ pipeline:
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
                         spec:
                           connectorRef: account.GCP_Sales_Admin
-                          image: <+input>
+                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
                         when:
                           stageStatus: Success
@@ -54,7 +54,7 @@ pipeline:
                         identifier: Google_Cloud_Run_Deploy
                         spec:
                           connectorRef: account.GCP_Sales_Admin
-                          image: <+input>
+                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
                         when:
                           stageStatus: Success
@@ -68,7 +68,7 @@ pipeline:
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
-                          image: <+input>
+                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                         timeout: 10m
                   name: Google Cloud Run Step Group
                   identifier: Google_Cloud_Run_Step_Group
@@ -91,7 +91,7 @@ pipeline:
                         identifier: Google_Cloud_Run_Rollback
                         spec:
                           connectorRef: account.GCP_Sales_Admin
-                          image: <+input>
+                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
                         when:
                           stageStatus: Success
