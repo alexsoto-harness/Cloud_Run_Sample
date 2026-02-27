@@ -42,7 +42,7 @@ pipeline:
                         name: Google Cloud Run Prepare Rollback Data
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
                         spec:
-                          connectorRef: <+input>
+                          connectorRef: account.GCP_Sales_Admin
                           image: <+input>
                           imagePullPolicy: Always
                         when:
@@ -53,7 +53,7 @@ pipeline:
                         name: Google Cloud Run Deploy
                         identifier: Google_Cloud_Run_Deploy
                         spec:
-                          connectorRef: <+input>
+                          connectorRef: account.GCP_Sales_Admin
                           image: <+input>
                           imagePullPolicy: Always
                         when:
@@ -64,7 +64,7 @@ pipeline:
                         name: GoogleCloudRunTrafficShift_1
                         identifier: GoogleCloudRunTrafficShift_1
                         spec:
-                          connectorRef: <+input>
+                          connectorRef: account.GCP_Sales_Admin
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
@@ -90,12 +90,12 @@ pipeline:
                         name: Google Cloud Run Rollback
                         identifier: Google_Cloud_Run_Rollback
                         spec:
-                          connectorRef: <+input>
+                          connectorRef: account.GCP_Sales_Admin
                           image: <+input>
                           imagePullPolicy: Always
                         when:
                           stageStatus: Success
-                        failureStrategies: []
+                        timeout: 10m
                   sharedPaths:
                     - /var/run
                     - /var/lib/docker
