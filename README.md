@@ -2,29 +2,22 @@
 
 ## Pipeline Overview
 
-This pipeline supports two deployment scenarios for Google Cloud Run:
-
-1. Deploying a Google Cloud Run Service
+This pipeline deploys a Google Cloud Run Service:
 
 - Deploy an application to Google Cloud Run.
 - Shift traffic between revisions to ensure a seamless user experience.
 - Provide rollback mechanisms in case of deployment failures.
-
-2. Executing a Google Cloud Run Job
-
-- Run a batch job on Google Cloud Run.
-- Ensure the job executes successfully based on defined criteria.
 
 ---
 
 ## Key Files and Their Purpose
 
 
-- [**`harness-cd-pipeline/pipeline.yaml`**](/google-cloud-run/harness-cd-pipeline/pipeline.yaml): Harness pipeline YAML for Google Cloud Run deployment.
+- [**`/harness-cd-pipeline/pipeline.yaml`**](./harness-cd-pipeline/pipeline.yaml): Harness pipeline YAML for Google Cloud Run deployment.
 - [**`/harness-cd-pipeline/service.yaml`**](./harness-cd-pipeline/service.yaml): Harness service definition YAML.
 - [**`/harness-cd-pipeline/environment.yaml`**](./harness-cd-pipeline/environment.yaml): YAML defining the deployment environment in Harness.
-- [**`harnesscd-pipeline/infrastructureDefinition.yaml`**](./harness-cd-pipeline/infrastructureDefinition.yaml): YAML defining the infrastructure for the deployment.
-- [**`harness-cd-pipeline/manifest.yaml`**](./harness-cd-pipeline/manifest.yaml): Manifest file required for defining the Google Cloud Run service.
+- [**`/harness-cd-pipeline/infrastructureDefinition.yaml`**](./harness-cd-pipeline/infrastructureDefinition.yaml): YAML defining the infrastructure for the deployment.
+- [**`/harness-cd-pipeline/manifest.yaml`**](./harness-cd-pipeline/manifest.yaml): Manifest file required for defining the Google Cloud Run service.
 ---
 
 ## Pipeline Use Case Details
@@ -51,7 +44,7 @@ The manifest file defines the Google Cloud Run service :-
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: qademo3
+  name: gcrdemo
   annotations:
     run.googleapis.com/minScale: '2'
 spec:
@@ -62,43 +55,9 @@ spec:
           ports:
             - containerPort: 8080
 ```
+
 ---
 
-**Stage 2: Job Deployment**
-
-**Objective**: Run a Cloud Run Job using Harness.
-
-**Inputs**:
-
-**Job Name**: Provide the name of the Cloud Run job to execute.
-
-**Container Configuration**
-**Container Registry**: Add a Harness Docker Registry connector to connect to Docker Hub
-**Image**: Enter the path, image, and tag for the image you want to run in this step. You can use public Harness plugin image `harness/google-cloud-run-plugin:1.0.1-linux-amd64`
-You can refer to [Harness DockerHub](https://hub.docker.com/r/harness/google-cloud-run-plugin/tags) for latest tag details.
-
-**Job Name**: Specify the name of the job you want to run.
-OR
-**Job Manifest**: Select Job Manifest when you want to deploy a new job or update an existing job using a manifest file.
-
-**Google Cloud Run Job Manifest File Structure**
-
-The manifest file defines the Google Cloud Run Job :-
-
-```yaml
-apiVersion: run.googleapis.com/v1
-kind: Job
-metadata:
-  name: JOB_NAME
-spec:
-  template:
-    spec:
-      template:
-        spec:
-          containers:
-          - name: JOB_NAME
-            image: CONTAINER_IMAGE_URL
-```
 ## Documentation
 
 - [Google Cloud Run](https://developer.harness.io/docs/continuous-delivery/deploy-srv-diff-platforms/google-cloud-functions/google-cloud-run/)

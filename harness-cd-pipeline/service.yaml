@@ -1,0 +1,35 @@
+service:
+  name: service_gcr
+  identifier: service_gcr
+  serviceDefinition:
+    type: GoogleCloudRun
+    spec:
+      manifests:
+        - manifest:
+            identifier: gcr_sample
+            type: GoogleCloudRunService
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: alexsotoharness
+                  repoName: alexsoto-harness/Cloud_Run_Sample
+                  branch: main
+                  paths:
+                    - harness-cd-pipeline/manifest.yaml
+      artifacts:
+        primary:
+          primaryArtifactRef: <+input>
+          sources:
+            - spec:
+                connectorRef: account.GCP_Sales_Admin
+                imagePath: gcrdemo
+                tag: <+input>
+                region: northamerica-northeast2
+                repositoryName: soto-gar
+                project: sales-209522
+              identifier: artifact_gcr
+              type: GoogleArtifactRegistry
+  gitOpsEnabled: false
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox

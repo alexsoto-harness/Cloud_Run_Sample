@@ -1,0 +1,13 @@
+infrastructureDefinition:
+  name: gcr_test_infra
+  identifier: gcr_test_infra
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  environmentRef: gcr_test
+  deploymentType: GoogleCloudRun
+  type: GoogleCloudRun
+  spec:
+    connectorRef: account.GCP_Sales_Admin
+    project: sales-209522
+    region: northamerica-northeast2
+  allowSimultaneousDeployments: false
