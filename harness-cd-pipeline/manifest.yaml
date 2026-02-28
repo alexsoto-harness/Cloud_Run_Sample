@@ -9,6 +9,7 @@ metadata:
     owner: soto
   annotations:
     run.googleapis.com/minScale: '2'
+    run.googleapis.com/invoker-iam-disabled: 'true'
 spec:
   template:
     spec:
