@@ -56,19 +56,60 @@ pipeline:
             description: GitHub connector for manifest repo
             required: true
             value: <+input>.default(alexsotoharness)
+          - name: repo_name
+            type: String
+            description: GitHub repository name for manifest
+            required: true
+            value: <+input>.default(Cloud_Run_Sample)
+          - name: repo_branch
+            type: String
+            description: Git branch for manifest
+            required: true
+            value: <+input>.default(dev)
+          - name: gar_repository
+            type: String
+            description: Google Artifact Registry repository name
+            required: true
+            value: <+input>.default(soto-gar)
           - name: invoker_iam_disabled
             type: String
             description: Set to true if public access is enabled on the Cloud Run service, false for new services
             required: true
             value: <+input>.default(true)
+          - name: service_ref
+            type: String
+            description: Harness service entity identifier
+            required: true
+            value: <+input>.default(service_gcr)
+          - name: environment_ref
+            type: String
+            description: Harness environment entity identifier
+            required: true
+            value: <+input>.default(gcr_test)
+          - name: infra_identifier
+            type: String
+            description: Harness infrastructure definition identifier
+            required: true
+            value: <+input>.default(gcr_test_infra)
         spec:
           deploymentType: GoogleCloudRun
           service:
-            serviceRef: service_gcr
+            serviceRef: <+stage.variables.service_ref>
             serviceInputs:
               serviceDefinition:
                 type: GoogleCloudRun
                 spec:
+                  manifests:
+                    - manifest:
+                        identifier: gcr_sample
+                        type: GoogleCloudRunService
+                        spec:
+                          store:
+                            type: Github
+                            spec:
+                              connectorRef: <+stage.variables.github_connector>
+                              repoName: <+stage.variables.repo_name>
+                              branch: <+stage.variables.repo_branch>
                   artifacts:
                     primary:
                       primaryArtifactRef: <+stage.variables.primary_artifact>
@@ -77,17 +118,18 @@ pipeline:
                           type: GoogleArtifactRegistry
                           spec:
                             connectorRef: <+stage.variables.gcp_connector>
+                            repositoryName: <+stage.variables.gar_repository>
                             project: <+stage.variables.gcp_project>
                             region: <+stage.variables.gcp_region>
                             package: <+stage.variables.service_name>
                             version: <+stage.variables.artifact_version>
           environment:
-            environmentRef: gcr_test
+            environmentRef: <+stage.variables.environment_ref>
             deployToAll: false
             infrastructureDefinitions:
-              - identifier: gcr_test_infra
+              - identifier: <+stage.variables.infra_identifier>
                 inputs:
-                  identifier: gcr_test_infra
+                  identifier: <+stage.variables.infra_identifier>
                   type: GoogleCloudRun
                   spec:
                     connectorRef: <+stage.variables.gcp_connector>
@@ -149,7 +191,7 @@ pipeline:
                     type: KubernetesDirect
                     spec:
                       connectorRef: <+stage.variables.k8s_connector>
-                      namespace: harness-delegate-ng
+                      namespace: default
               - step:
                   type: HarnessApproval
                   name: Cutover Approval
@@ -194,6 +236,7 @@ pipeline:
                     type: KubernetesDirect
                     spec:
                       connectorRef: <+stage.variables.k8s_connector>
+                      namespace: default
             rollbackSteps:
               - stepGroup:
                   identifier: Google_Cloud_Run_Rollback_Step_Group

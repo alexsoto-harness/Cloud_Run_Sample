@@ -12,12 +12,12 @@ service:
               store:
                 type: Github
                 spec:
-                  connectorRef: alexsotoharness
+                  connectorRef: <+input>
                   gitFetchType: Branch
                   paths:
                     - harness-cd-pipeline/manifest.yaml
-                  repoName: Cloud_Run_Sample
-                  branch: dev
+                  repoName: <+input>
+                  branch: <+input>
       artifacts:
         primary:
           primaryArtifactRef: <+input>
@@ -27,7 +27,7 @@ service:
                 repositoryType: docker
                 project: <+input>
                 region: <+input>
-                repositoryName: soto-gar
+                repositoryName: <+input>
                 package: <+input>
                 version: <+input>
               identifier: artifact_gcr

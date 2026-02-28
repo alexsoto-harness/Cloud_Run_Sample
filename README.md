@@ -93,6 +93,22 @@ All configuration is driven by stage variables with sensible defaults. Override 
 | `gcp_connector` | GCP connector for artifact registry and infrastructure | `account.<YOUR_GCP_CONNECTOR>` |
 | `github_connector` | GitHub connector for manifest repo | `<YOUR_GITHUB_CONNECTOR>` |
 
+### Git / Repo
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `repo_name` | GitHub repository name for the manifest | `Cloud_Run_Sample` |
+| `repo_branch` | Git branch for the manifest | `dev` |
+| `gar_repository` | Google Artifact Registry repository name | `<YOUR_GAR_REPOSITORY>` |
+
+### Harness Entities
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `service_ref` | Harness service entity identifier | `service_gcr` |
+| `environment_ref` | Harness environment entity identifier | `gcr_test` |
+| `infra_identifier` | Harness infrastructure definition identifier | `gcr_test_infra` |
+
 ### Public Access
 
 | Variable | Description | Default |
@@ -219,6 +235,54 @@ gcloud projects add-iam-policy-binding <YOUR_GCP_PROJECT> \
 ```
 
 This role includes `run.services.setIamPolicy`, allowing the deploy to freely set the annotation. With this in place, you can hardcode the annotation to `true` in the manifest and remove the stage variable. Note that `roles/editor` does **not** include this permission. Some organizations may require conditions on IAM bindings, check with your security team if the binding is rejected.
+
+---
+
+## Forking / Replicating This Project
+
+If you're forking this repo or copying the YAML files into your own Harness account, you'll need to update the following before anything will work.
+
+### 1. Organization and Project Identifiers
+
+Every entity file contains `orgIdentifier` and `projectIdentifier` hardcoded to the original account. Update these in **all four files**:
+
+| File | Fields to update |
+|------|-----------------|
+| `pipeline.yaml` | `orgIdentifier`, `projectIdentifier` |
+| `service.yaml` | `orgIdentifier`, `projectIdentifier` |
+| `environment.yaml` | `orgIdentifier`, `projectIdentifier` |
+| `infrastructureDefinition.yaml` | `orgIdentifier`, `projectIdentifier` |
+
+### 2. Entity Names and Identifiers
+
+The entity files define names and identifiers (`service_gcr`, `gcr_test`, `gcr_test_infra`). You can keep them or rename them, but if you rename them, update the corresponding stage variable defaults in `pipeline.yaml` (`service_ref`, `environment_ref`, `infra_identifier`).
+
+### 3. Cross-References
+
+- `infrastructureDefinition.yaml` references `environmentRef: gcr_test` — update if you renamed the environment
+- `service.yaml` has `paths: harness-cd-pipeline/manifest.yaml` — update if you move the manifest to a different path
+
+### 4. Connectors
+
+Create the following connectors in your Harness account if you don't already have them and update the stage variable defaults:
+
+| Connector | Purpose | Stage Variable |
+|-----------|---------|----------------|
+| Docker Registry | Pull plugin images from Docker Hub | `docker_connector` |
+| Kubernetes | Step group infrastructure (delegate cluster) | `k8s_connector` |
+| GCP | Authenticate to GCP for Cloud Run and Artifact Registry | `gcp_connector` |
+| GitHub | Fetch the manifest from your repo | `github_connector` |
+
+### 5. GCP Prerequisites
+
+- A GCP project with Cloud Run and Artifact Registry APIs enabled
+- A service account with at least `roles/editor` (or `roles/run.admin` for full annotation support, see [above](#the-invoker-iam-disabled-annotation))
+- An Artifact Registry Docker repository in your chosen region
+- Container images pushed to the registry (see [Building Container Images](#building-container-images))
+
+### 6. First Deploy
+
+On the first deploy of a new service, set the `invoker_iam_disabled` stage variable to `false`. After the deploy succeeds, enable public access (see [Allowing Public Access](#allowing-public-access)), then use the default `true` for all subsequent deploys.
 
 ---
 
