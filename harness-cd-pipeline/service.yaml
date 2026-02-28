@@ -13,11 +13,11 @@ service:
                 type: Github
                 spec:
                   connectorRef: alexsotoharness
-                  repoName: Cloud_Run_Sample
                   gitFetchType: Branch
-                  branch: main
                   paths:
                     - harness-cd-pipeline/manifest.yaml
+                  repoName: Cloud_Run_Sample
+                  branch: dev
       artifacts:
         primary:
           primaryArtifactRef: <+input>
