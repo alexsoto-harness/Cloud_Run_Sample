@@ -72,7 +72,7 @@ pipeline:
                           skipTrafficShift: false
                           envVariables:
                             PLUGIN_CLOUD_RUN_SKIP_TRAFFIC_UPDATE: "true"
-                          preCommand: |-
+                          preExecution: |-
                             CURRENT_REV=$(gcloud run services describe gcrdemo --region=northamerica-northeast2 --project=sales-209522 --format='value(status.traffic[0].revisionName)')
                             echo "Current serving revision: $CURRENT_REV"
                             MANIFEST=$(find /harness -name 'manifest.yaml' | head -1)
