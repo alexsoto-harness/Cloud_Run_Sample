@@ -52,7 +52,7 @@ pipeline:
                         identifier: Run_1
                         spec:
                           connectorRef: account.harnessImage
-                          image: google/cloud-sdk:alpine
+                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           shell: Sh
                           command: gcloud run services list --region=northamerica-northeast2 --project=sales-209522
                     - step:
