@@ -93,6 +93,14 @@ The pipeline implements a blue/green pattern across three phases:
    ```
    This gives the new revision a testable URL (`https://staging---<YOUR_SERVICE>-<PROJECT_NUMBER>.<YOUR_REGION>.run.app`) without receiving any production traffic.
 
+   **First deploy handling:** On the very first deploy of a new service, the Prepare Rollback Data step has no previous revision data, so the expression resolves to `"null"`. A `when` condition on this step skips it when no previous revision exists:
+   ```yaml
+   when:
+     stageStatus: Success
+     condition: <expression for revisionMetadata[0].revisionName> != "null"
+   ```
+   On first deploy, the deploy step detects it's a new service and routes 100% traffic to the new revision automatically, no tagging is needed. On all subsequent deploys, the condition passes and the step runs normally.
+
 ### Phase 2: Approval Gate
 
 5. **Cutover Approval** — A Harness Approval step where the approver can test the new revision at the staging URL before approving the cutover. The pipeline pauses here until approved.
@@ -100,7 +108,7 @@ The pipeline implements a blue/green pattern across three phases:
 ### Phase 3: Traffic Shift (Step Group)
 
 6. **Download Manifests** — Re-fetches the manifest (required because this is a separate step group with its own container)
-7. **Shift Traffic To Primary** — Routes 100% of traffic to the `LATEST` revision and tags it as `primary`. The `staging` tag is automaticallyremoved as part of this step.
+7. **Shift Traffic To Primary** — Routes 100% of traffic to the `LATEST` revision and tags it as `primary`. The `staging` tag is automatically removed as part of this step.
 
 On failure at any point, the pipeline automatically triggers a **rollback** to the previous revision.
 
@@ -148,8 +156,6 @@ spec:
 ```
 
 The `<+artifacts.primary.image>` expression is resolved by Harness at runtime to the full GAR image path with the selected tag.
-
-**Do not** include the `run.googleapis.com/invoker-iam-disabled` annotation in the manifest. Setting it during service creation requires `run.services.setIamPolicy` permission, which most service accounts don't have. Once public access is configured via IAM (see below), Cloud Run sets this annotation automatically and preserves it across subsequent deploys.
 
 ---
 
