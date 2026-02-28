@@ -80,7 +80,7 @@ pipeline:
                   stepGroupInfra:
                     type: KubernetesDirect
                     spec:
-                      connectorRef: account.harnessImage
+                      connectorRef: account.SEsandboxaccountK8s
                       namespace: harness-delegate-ng
             rollbackSteps:
               - stepGroup:
@@ -104,7 +104,7 @@ pipeline:
                   stepGroupInfra:
                     type: KubernetesDirect
                     spec:
-                      connectorRef: account.harnessImage
+                      connectorRef: account.SEsandboxaccountK8s
                       namespace: default
         tags: {}
         failureStrategies:
