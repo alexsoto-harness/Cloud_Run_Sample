@@ -53,37 +53,6 @@ pipeline:
                         spec: {}
                         timeout: 10m
                     - step:
-                        type: Run
-                        name: Patch Manifest Traffic
-                        identifier: Patch_Manifest_Traffic
-                        spec:
-                          connectorRef: account.harnessImage
-                          image: google/cloud-sdk:alpine
-                          shell: Sh
-                          command: |-
-                            echo '<+secrets.getValue("account.GCP_Sales_Admin")>' > /tmp/sa-key.json
-                            gcloud auth activate-service-account --key-file=/tmp/sa-key.json
-
-                            # Get the current revision serving traffic
-                            CURRENT_REV=$(gcloud run services describe gcrdemo \
-                              --region=northamerica-northeast2 \
-                              --project=sales-209522 \
-                              --format='value(status.traffic[0].revisionName)')
-                            echo "Current serving revision: $CURRENT_REV"
-
-                            # Find the manifest file
-                            MANIFEST=$(find /harness -name 'manifest.yaml' | head -1)
-                            echo "Manifest path: $MANIFEST"
-                            echo "--- Before patching ---"
-                            cat "$MANIFEST"
-
-                            # Remove any existing traffic section and append the correct one
-                            sed -i '/^  traffic:/,$d' "$MANIFEST"
-                            printf '\n  traffic:\n  - revisionName: %s\n    percent: 100\n  - latestRevision: true\n    percent: 0\n    tag: staging\n' "$CURRENT_REV" >> "$MANIFEST"
-
-                            echo "--- After patching ---"
-                            cat "$MANIFEST"
-                    - step:
                         type: GoogleCloudRunPrepareRollbackData
                         name: Prepare Rollback Data
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
@@ -103,6 +72,16 @@ pipeline:
                           skipTrafficShift: false
                           envVariables:
                             PLUGIN_CLOUD_RUN_SKIP_TRAFFIC_UPDATE: "true"
+                          preCommand: |-
+                            CURRENT_REV=$(gcloud run services describe gcrdemo --region=northamerica-northeast2 --project=sales-209522 --format='value(status.traffic[0].revisionName)')
+                            echo "Current serving revision: $CURRENT_REV"
+                            MANIFEST=$(find /harness -name 'manifest.yaml' | head -1)
+                            echo "--- Before patching ---"
+                            cat "$MANIFEST"
+                            sed -i '/^  traffic:/,$d' "$MANIFEST"
+                            printf '\n  traffic:\n  - revisionName: %s\n    percent: 100\n  - latestRevision: true\n    percent: 0\n    tag: staging\n' "$CURRENT_REV" >> "$MANIFEST"
+                            echo "--- After patching ---"
+                            cat "$MANIFEST"
                         timeout: 10m
                   name: Cloud Run Deploy to Staging
                   identifier: Google_Cloud_Run_Step_Group
