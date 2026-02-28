@@ -81,7 +81,7 @@ pipeline:
                             - revisionName: LATEST
                               trafficValue: 0
                               tag: staging
-                            - revisionName: <+pipeline.stages.google_cloud_run_service.spec.execution.steps.Google_Cloud_Run_Step_Group.steps.Deploy_To_Staging.GoogleCloudRunDeployOutcome.revisionDetails[0].revisionName>
+                            - revisionName: <+pipeline.stages.google_cloud_run_service.spec.execution.steps.Google_Cloud_Run_Step_Group.steps.Google_Cloud_Run_Prepare_Rollback_Data.GoogleCloudRunPrepareRollbackDataOutcome.revisionMetadata[0].revisionName>
                               trafficValue: 100
                               tag: primary
                           image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
@@ -125,7 +125,7 @@ pipeline:
                   name: Cutover Approval
                   identifier: Cutover_Approval
                   spec:
-                    approvalMessage: Test the new revision at <+execution.steps.Google_Cloud_Run_Step_Group.steps.Tag_Staging_Revision.output.outputVariables.STAGING_URL> before approving cutover to primary.
+                    approvalMessage: Test the new revision before approving cutover to primary.
                     includePipelineExecutionHistory: true
                     isAutoRejectEnabled: false
                     approvers:
