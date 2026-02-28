@@ -25,10 +25,10 @@ service:
             - spec:
                 connectorRef: account.GCP_Sales_Admin
                 repositoryType: docker
-                project: sales-209522
-                region: northamerica-northeast2
+                project: <+input>
+                region: <+input>
                 repositoryName: soto-gar
-                package: gcrdemodev
+                package: <+input>
                 version: <+input>
               identifier: artifact_gcr
               type: GoogleArtifactRegistry

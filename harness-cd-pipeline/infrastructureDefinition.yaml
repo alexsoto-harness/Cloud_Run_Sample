@@ -8,6 +8,6 @@ infrastructureDefinition:
   type: GoogleCloudRun
   spec:
     connectorRef: account.GCP_Sales_Admin
-    project: sales-209522
-    region: northamerica-northeast2
+    project: <+input>
+    region: <+input>
   allowSimultaneousDeployments: false

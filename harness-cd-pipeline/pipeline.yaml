@@ -21,6 +21,27 @@ pipeline:
         identifier: google_cloud_run_service
         description: ""
         type: Deployment
+        variables:
+          - name: gcp_project
+            type: String
+            description: GCP project ID
+            required: true
+            value: <+input>.default(sales-209522)
+          - name: gcp_region
+            type: String
+            description: GCP region for Cloud Run
+            required: true
+            value: <+input>.default(northamerica-northeast2)
+          - name: service_name
+            type: String
+            description: Cloud Run service name
+            required: true
+            value: <+input>.default(gcrdemodev)
+          - name: owner_label
+            type: String
+            description: Owner label for the Cloud Run service
+            required: true
+            value: <+input>.default(soto)
         spec:
           deploymentType: GoogleCloudRun
           service:
@@ -36,12 +57,21 @@ pipeline:
                         - identifier: artifact_gcr
                           type: GoogleArtifactRegistry
                           spec:
+                            project: <+stage.variables.gcp_project>
+                            region: <+stage.variables.gcp_region>
+                            package: <+stage.variables.service_name>
                             version: <+pipeline.variables.artifact_version>
           environment:
             environmentRef: gcr_test
             deployToAll: false
             infrastructureDefinitions:
               - identifier: gcr_test_infra
+                inputs:
+                  identifier: gcr_test_infra
+                  type: GoogleCloudRun
+                  spec:
+                    project: <+stage.variables.gcp_project>
+                    region: <+stage.variables.gcp_region>
           execution:
             steps:
               - stepGroup:
