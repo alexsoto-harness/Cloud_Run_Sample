@@ -1,5 +1,5 @@
 pipeline:
-  name: GCR_Pipeline_Sample
+  name: Cloud Run Blue Green
   identifier: GCR_Pipeline_Sample
   tags: {}
   projectIdentifier: soto_sandbox
@@ -17,7 +17,7 @@ pipeline:
       value: <+input>.default(artifact_gcr)
   stages:
     - stage:
-        name: google_cloud_run_service
+        name: Cloud Run Blue Green Deploy
         identifier: google_cloud_run_service
         description: ""
         type: Deployment
@@ -48,13 +48,13 @@ pipeline:
                   steps:
                     - step:
                         type: DownloadManifests
-                        name: DownloadManifests
+                        name: Download Manifests
                         identifier: DownloadManifests
                         spec: {}
                         timeout: 10m
                     - step:
                         type: GoogleCloudRunPrepareRollbackData
-                        name: Google Cloud Run Prepare Rollback Data
+                        name: Prepare Rollback Data
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
                         spec:
                           connectorRef: account.harnessImage
@@ -63,25 +63,14 @@ pipeline:
                         timeout: 10m
                     - step:
                         type: GoogleCloudRunDeploy
-                        name: Google Cloud Run Deploy
-                        identifier: Google_Cloud_Run_Deploy
+                        name: Deploy To Staging
+                        identifier: Deploy_To_Staging
                         spec:
                           connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           imagePullPolicy: Always
                         timeout: 10m
-                    - step:
-                        type: GoogleCloudRunTrafficShift
-                        name: GoogleCloudRunTrafficShift_1
-                        identifier: GoogleCloudRunTrafficShift_1
-                        spec:
-                          connectorRef: account.harnessImage
-                          revisionTrafficDetails:
-                            - revisionName: LATEST
-                              trafficValue: 100
-                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
-                        timeout: 10m
-                  name: Google Cloud Run Step Group
+                  name: Cloud Run Deploy to Staging
                   identifier: Google_Cloud_Run_Step_Group
                   sharedPaths:
                     - /var/run
@@ -91,6 +80,43 @@ pipeline:
                     spec:
                       connectorRef: account.SEsandboxaccountK8s
                       namespace: harness-delegate-ng
+              - step:
+                  type: HarnessApproval
+                  name: Cutover Approval
+                  identifier: Cutover_Approval
+                  spec:
+                    approvalMessage: Approve the cutover shift from Staging to Primary
+                    includePipelineExecutionHistory: true
+                    isAutoRejectEnabled: false
+                    approvers:
+                      userGroups:
+                        - account._account_all_users
+                      minimumCount: 1
+                      disallowPipelineExecutor: false
+                    approverInputs: []
+                  timeout: 1d
+              - stepGroup:
+                  name: Cloud Run Traffic Shift
+                  identifier: Cloud_Run_Traffic_Shift
+                  steps:
+                    - step:
+                        type: GoogleCloudRunTrafficShift
+                        name: Shift Traffic To Primary
+                        identifier: Shift_Traffic_To_Primary
+                        spec:
+                          connectorRef: account.harnessImage
+                          revisionTrafficDetails:
+                            - revisionName: LATEST
+                              trafficValue: 100
+                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
+                        timeout: 10m
+                  sharedPaths:
+                    - /var/run
+                    - /var/lib/docker
+                  stepGroupInfra:
+                    type: KubernetesDirect
+                    spec:
+                      connectorRef: org.se_sandbox_k8s
             rollbackSteps:
               - stepGroup:
                   identifier: Google_Cloud_Run_Rollback_Step_Group
