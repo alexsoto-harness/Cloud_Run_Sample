@@ -58,7 +58,7 @@ pipeline:
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
                         spec:
                           connectorRef: account.harnessImage
-                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                           imagePullPolicy: Always
                         timeout: 10m
                     - step:
@@ -67,21 +67,8 @@ pipeline:
                         identifier: Deploy_To_Staging
                         spec:
                           connectorRef: account.harnessImage
-                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                           imagePullPolicy: Always
-                          skipTrafficShift: false
-                          envVariables:
-                            PLUGIN_CLOUD_RUN_SKIP_TRAFFIC_UPDATE: "true"
-                          preExecution: |-
-                            CURRENT_REV=$(gcloud run services describe gcrdemo --region=northamerica-northeast2 --project=sales-209522 --format='value(status.traffic[0].revisionName)')
-                            echo "Current serving revision: $CURRENT_REV"
-                            MANIFEST=$(find /harness -name 'manifest.yaml' | head -1)
-                            echo "--- Before patching ---"
-                            cat "$MANIFEST"
-                            sed -i '/^  traffic:/,$d' "$MANIFEST"
-                            printf '\n  traffic:\n  - revisionName: %s\n    percent: 100\n  - latestRevision: true\n    percent: 0\n    tag: staging\n' "$CURRENT_REV" >> "$MANIFEST"
-                            echo "--- After patching ---"
-                            cat "$MANIFEST"
                         timeout: 10m
                   name: Cloud Run Deploy to Staging
                   identifier: Google_Cloud_Run_Step_Group
@@ -128,7 +115,7 @@ pipeline:
                             - revisionName: LATEST
                               trafficValue: 100
                               tag: primary
-                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                         timeout: 10m
                   sharedPaths:
                     - /var/run
@@ -148,7 +135,7 @@ pipeline:
                         identifier: Google_Cloud_Run_Rollback
                         spec:
                           connectorRef: account.harnessImage
-                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                           imagePullPolicy: Always
                         timeout: 10m
                   sharedPaths:
