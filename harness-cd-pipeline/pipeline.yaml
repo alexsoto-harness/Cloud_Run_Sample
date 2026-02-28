@@ -86,6 +86,9 @@ pipeline:
                               tag: primary
                           image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                         timeout: 10m
+                        when:
+                          stageStatus: Success
+                          condition: <+pipeline.stages.google_cloud_run_service.spec.execution.steps.Google_Cloud_Run_Step_Group.steps.Google_Cloud_Run_Prepare_Rollback_Data.GoogleCloudRunPrepareRollbackDataOutcome.revisionMetadata[0].revisionName> != "null"
                   name: Cloud Run Deploy to Staging
                   identifier: Google_Cloud_Run_Step_Group
                   sharedPaths:
