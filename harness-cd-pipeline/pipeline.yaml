@@ -79,7 +79,7 @@ pipeline:
 
                             # Remove any existing traffic section and append the correct one
                             sed -i '/^  traffic:/,$d' "$MANIFEST"
-                            printf '  traffic:\n  - revisionName: %s\n    percent: 100\n  - latestRevision: true\n    percent: 0\n    tag: staging\n' "$CURRENT_REV" >> "$MANIFEST"
+                            printf '\n  traffic:\n  - revisionName: %s\n    percent: 100\n  - latestRevision: true\n    percent: 0\n    tag: staging\n' "$CURRENT_REV" >> "$MANIFEST"
 
                             echo "--- After patching ---"
                             cat "$MANIFEST"
