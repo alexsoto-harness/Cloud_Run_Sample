@@ -69,6 +69,7 @@ pipeline:
                           connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                           imagePullPolicy: Always
+                          skipTrafficShift: true
                         timeout: 10m
                   name: Cloud Run Deploy to Staging
                   identifier: Google_Cloud_Run_Step_Group
