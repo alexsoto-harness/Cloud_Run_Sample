@@ -86,7 +86,7 @@ pipeline:
                   name: Cutover Approval
                   identifier: Cutover_Approval
                   spec:
-                    approvalMessage: "Test the new revision at https://staging---gcrdemo-980596850008.northamerica-northeast2.run.app before approving cutover to primary."
+                    approvalMessage: Test the new revision at https://staging---gcrdemo-980596850008.northamerica-northeast2.run.app before approving cutover to primary.
                     includePipelineExecutionHistory: true
                     isAutoRejectEnabled: false
                     approvers:
@@ -109,6 +109,7 @@ pipeline:
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
+                              tag: primary
                           image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                         timeout: 10m
                   sharedPaths:
