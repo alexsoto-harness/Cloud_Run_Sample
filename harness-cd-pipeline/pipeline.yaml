@@ -72,6 +72,21 @@ pipeline:
                           skipTrafficShift: true
                         timeout: 10m
                     - step:
+                        type: GoogleCloudRunTrafficShift
+                        name: Tag New Revision
+                        identifier: Tag_New_Revision
+                        spec:
+                          connectorRef: account.harnessImage
+                          revisionTrafficDetails:
+                            - revisionName: LATEST
+                              trafficValue: 0
+                              tag: staging
+                            - revisionName: <+pipeline.stages.google_cloud_run_service.spec.execution.steps.Google_Cloud_Run_Step_Group.steps.Deploy_To_Staging.GoogleCloudRunDeployOutcome.revisionDetails[0].revisionName>
+                              trafficValue: 100
+                              tag: primary
+                          image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
+                        timeout: 10m
+                    - step:
                         type: Run
                         name: Tag Staging Revision
                         identifier: Tag_Staging_Revision
@@ -92,6 +107,9 @@ pipeline:
                             - name: STAGING_URL
                               type: String
                               value: STAGING_URL
+                        when:
+                          stageStatus: Success
+                          condition: "false"
                   name: Cloud Run Deploy to Staging
                   identifier: Google_Cloud_Run_Step_Group
                   sharedPaths:
