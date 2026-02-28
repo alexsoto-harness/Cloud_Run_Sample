@@ -52,9 +52,12 @@ pipeline:
                         identifier: Run_1
                         spec:
                           connectorRef: account.harnessImage
-                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
+                          image: google/cloud-sdk:alpine
                           shell: Sh
-                          command: gcloud run services list --region=northamerica-northeast2 --project=sales-209522
+                          command: |-
+                            echo '<+secrets.getValue("account.GCP_Sales_Admin")>' > /tmp/sa-key.json
+                            gcloud auth activate-service-account --key-file=/tmp/sa-key.json
+                            gcloud run services list --region=northamerica-northeast2 --project=sales-209522
                     - step:
                         type: DownloadManifests
                         name: Download Manifests
