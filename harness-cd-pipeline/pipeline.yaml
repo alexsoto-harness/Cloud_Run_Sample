@@ -35,8 +35,10 @@ pipeline:
                         type: DownloadManifests
                         name: DownloadManifests
                         identifier: DownloadManifests
-                        spec: {}
-                        failureStrategies: []
+                        spec:
+                          delegateSelectors:
+                            - se-sandbox-org-delegate
+                        timeout: 10m
                     - step:
                         type: GoogleCloudRunPrepareRollbackData
                         name: Google Cloud Run Prepare Rollback Data
@@ -45,6 +47,8 @@ pipeline:
                           connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
+                          delegateSelectors:
+                            - se-sandbox-org-delegate
                         when:
                           stageStatus: Success
                         timeout: 10m
@@ -56,6 +60,8 @@ pipeline:
                           connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
+                          delegateSelectors:
+                            - se-sandbox-org-delegate
                         when:
                           stageStatus: Success
                         timeout: 10m
@@ -68,9 +74,9 @@ pipeline:
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
-                              tags:
-                                - stable
                           image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
+                          delegateSelectors:
+                            - se-sandbox-org-delegate
                         timeout: 10m
                   name: Google Cloud Run Step Group
                   identifier: Google_Cloud_Run_Step_Group
