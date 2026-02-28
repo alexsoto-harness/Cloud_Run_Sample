@@ -47,6 +47,15 @@ pipeline:
               - stepGroup:
                   steps:
                     - step:
+                        type: Run
+                        name: Run_1
+                        identifier: Run_1
+                        spec:
+                          connectorRef: account.harnessImage
+                          image: google/cloud-sdk:alpine
+                          shell: Sh
+                          command: gcloud run services list --region=northamerica-northeast2 --project=sales-209522
+                    - step:
                         type: DownloadManifests
                         name: Download Manifests
                         identifier: DownloadManifests
