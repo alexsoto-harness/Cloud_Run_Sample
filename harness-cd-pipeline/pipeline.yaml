@@ -45,12 +45,10 @@ pipeline:
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
                         spec:
                           connectorRef: account.harnessImage
-                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           imagePullPolicy: Always
                           delegateSelectors:
                             - se-sandbox-org-delegate
-                        when:
-                          stageStatus: Success
                         timeout: 10m
                     - step:
                         type: GoogleCloudRunDeploy
@@ -58,12 +56,10 @@ pipeline:
                         identifier: Google_Cloud_Run_Deploy
                         spec:
                           connectorRef: account.harnessImage
-                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           imagePullPolicy: Always
                           delegateSelectors:
                             - se-sandbox-org-delegate
-                        when:
-                          stageStatus: Success
                         timeout: 10m
                     - step:
                         type: GoogleCloudRunTrafficShift
@@ -74,7 +70,7 @@ pipeline:
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
-                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           delegateSelectors:
                             - se-sandbox-org-delegate
                         timeout: 10m
@@ -99,10 +95,8 @@ pipeline:
                         identifier: Google_Cloud_Run_Rollback
                         spec:
                           connectorRef: account.harnessImage
-                          image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
+                          image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           imagePullPolicy: Always
-                        when:
-                          stageStatus: Success
                         timeout: 10m
                   sharedPaths:
                     - /var/run
