@@ -9,7 +9,7 @@ pipeline:
       type: String
       description: Artifact version to deploy
       required: true
-      value: <+input>.default(v1)
+      value: <+input>.default(v2)
     - name: primary_artifact
       type: String
       description: Primary artifact identifier
