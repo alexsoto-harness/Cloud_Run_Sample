@@ -42,7 +42,7 @@ pipeline:
                         name: Google Cloud Run Prepare Rollback Data
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
                         spec:
-                          connectorRef: account.GCP_Sales_Admin
+                          connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
                         when:
@@ -53,7 +53,7 @@ pipeline:
                         name: Google Cloud Run Deploy
                         identifier: Google_Cloud_Run_Deploy
                         spec:
-                          connectorRef: account.GCP_Sales_Admin
+                          connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
                         when:
@@ -64,7 +64,7 @@ pipeline:
                         name: GoogleCloudRunTrafficShift_1
                         identifier: GoogleCloudRunTrafficShift_1
                         spec:
-                          connectorRef: account.GCP_Sales_Admin
+                          connectorRef: account.harnessImage
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
@@ -80,7 +80,7 @@ pipeline:
                   stepGroupInfra:
                     type: KubernetesDirect
                     spec:
-                      connectorRef: account.SEsandboxaccountK8s
+                      connectorRef: account.harnessImage
                       namespace: harness-delegate-ng
             rollbackSteps:
               - stepGroup:
@@ -92,7 +92,7 @@ pipeline:
                         name: Google Cloud Run Rollback
                         identifier: Google_Cloud_Run_Rollback
                         spec:
-                          connectorRef: account.GCP_Sales_Admin
+                          connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.1-linux-amd64
                           imagePullPolicy: Always
                         when:
@@ -104,7 +104,7 @@ pipeline:
                   stepGroupInfra:
                     type: KubernetesDirect
                     spec:
-                      connectorRef: account.SEsandboxaccountK8s
+                      connectorRef: account.harnessImage
                       namespace: default
         tags: {}
         failureStrategies:
