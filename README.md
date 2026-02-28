@@ -98,7 +98,7 @@ All configuration is driven by stage variables with sensible defaults. Override 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `repo_name` | GitHub repository name for the manifest | `Cloud_Run_Sample` |
-| `repo_branch` | Git branch for the manifest | `dev` |
+| `repo_branch` | Git branch for the manifest | `main` |
 | `gar_repository` | Google Artifact Registry repository name | `<YOUR_GAR_REPOSITORY>` |
 
 ### Harness Entities
