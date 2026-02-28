@@ -4,17 +4,6 @@ pipeline:
   tags: {}
   projectIdentifier: soto_sandbox
   orgIdentifier: sandbox
-  variables:
-    - name: artifact_version
-      type: String
-      description: Artifact version to deploy
-      required: true
-      value: <+input>.default(neutral).selectOneFrom(neutral,blue,green)
-    - name: primary_artifact
-      type: String
-      description: Primary artifact identifier
-      required: true
-      value: <+input>.default(artifact_gcr)
   stages:
     - stage:
         name: Cloud Run Blue Green Deploy
@@ -22,6 +11,16 @@ pipeline:
         description: ""
         type: Deployment
         variables:
+          - name: artifact_version
+            type: String
+            description: Artifact version to deploy
+            required: true
+            value: <+input>.default(neutral).selectOneFrom(neutral,blue,green)
+          - name: primary_artifact
+            type: String
+            description: Primary artifact identifier
+            required: true
+            value: <+input>.default(artifact_gcr)
           - name: gcp_project
             type: String
             description: GCP project ID
@@ -37,11 +36,31 @@ pipeline:
             description: Cloud Run service name
             required: true
             value: <+input>.default(gcrdemodev)
-          - name: owner_label
+          - name: docker_connector
             type: String
-            description: Owner label for the Cloud Run service
+            description: Docker registry connector for plugin images
             required: true
-            value: <+input>.default(soto)
+            value: <+input>.default(account.harnessImage)
+          - name: k8s_connector
+            type: String
+            description: Kubernetes connector for step group infra
+            required: true
+            value: <+input>.default(org.se_sandbox_k8s)
+          - name: gcp_connector
+            type: String
+            description: GCP connector for artifact registry and infrastructure
+            required: true
+            value: <+input>.default(account.GCP_Sales_Admin)
+          - name: github_connector
+            type: String
+            description: GitHub connector for manifest repo
+            required: true
+            value: <+input>.default(alexsotoharness)
+          - name: invoker_iam_disabled
+            type: String
+            description: Set to true if public access is enabled on the Cloud Run service, false for new services
+            required: true
+            value: <+input>.default(true)
         spec:
           deploymentType: GoogleCloudRun
           service:
@@ -52,15 +71,16 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: <+pipeline.variables.primary_artifact>
+                      primaryArtifactRef: <+stage.variables.primary_artifact>
                       sources:
                         - identifier: artifact_gcr
                           type: GoogleArtifactRegistry
                           spec:
+                            connectorRef: <+stage.variables.gcp_connector>
                             project: <+stage.variables.gcp_project>
                             region: <+stage.variables.gcp_region>
                             package: <+stage.variables.service_name>
-                            version: <+pipeline.variables.artifact_version>
+                            version: <+stage.variables.artifact_version>
           environment:
             environmentRef: gcr_test
             deployToAll: false
@@ -70,6 +90,7 @@ pipeline:
                   identifier: gcr_test_infra
                   type: GoogleCloudRun
                   spec:
+                    connectorRef: <+stage.variables.gcp_connector>
                     project: <+stage.variables.gcp_project>
                     region: <+stage.variables.gcp_region>
           execution:
@@ -87,7 +108,7 @@ pipeline:
                         name: Prepare Rollback Data
                         identifier: Google_Cloud_Run_Prepare_Rollback_Data
                         spec:
-                          connectorRef: account.harnessImage
+                          connectorRef: <+stage.variables.docker_connector>
                           image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                           imagePullPolicy: Always
                         timeout: 10m
@@ -96,7 +117,7 @@ pipeline:
                         name: Deploy To Staging
                         identifier: Deploy_To_Staging
                         spec:
-                          connectorRef: account.harnessImage
+                          connectorRef: <+stage.variables.docker_connector>
                           image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                           imagePullPolicy: Always
                           skipTrafficShift: true
@@ -106,7 +127,7 @@ pipeline:
                         name: Tag New Revision
                         identifier: Tag_New_Revision
                         spec:
-                          connectorRef: account.harnessImage
+                          connectorRef: <+stage.variables.docker_connector>
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 0
@@ -127,7 +148,7 @@ pipeline:
                   stepGroupInfra:
                     type: KubernetesDirect
                     spec:
-                      connectorRef: account.SEsandboxaccountK8s
+                      connectorRef: <+stage.variables.k8s_connector>
                       namespace: harness-delegate-ng
               - step:
                   type: HarnessApproval
@@ -159,7 +180,7 @@ pipeline:
                         name: Shift Traffic To Primary
                         identifier: Shift_Traffic_To_Primary
                         spec:
-                          connectorRef: account.harnessImage
+                          connectorRef: <+stage.variables.docker_connector>
                           revisionTrafficDetails:
                             - revisionName: LATEST
                               trafficValue: 100
@@ -172,7 +193,7 @@ pipeline:
                   stepGroupInfra:
                     type: KubernetesDirect
                     spec:
-                      connectorRef: org.se_sandbox_k8s
+                      connectorRef: <+stage.variables.k8s_connector>
             rollbackSteps:
               - stepGroup:
                   identifier: Google_Cloud_Run_Rollback_Step_Group
@@ -183,7 +204,7 @@ pipeline:
                         name: Google Cloud Run Rollback
                         identifier: Google_Cloud_Run_Rollback
                         spec:
-                          connectorRef: account.harnessImage
+                          connectorRef: <+stage.variables.docker_connector>
                           image: harness/google-cloud-run-plugin:1.0.6-linux-amd64
                           imagePullPolicy: Always
                         timeout: 10m
@@ -193,7 +214,7 @@ pipeline:
                   stepGroupInfra:
                     type: KubernetesDirect
                     spec:
-                      connectorRef: account.SEsandboxaccountK8s
+                      connectorRef: <+stage.variables.k8s_connector>
                       namespace: default
         tags: {}
         failureStrategies:

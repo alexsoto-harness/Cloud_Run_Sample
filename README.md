@@ -65,16 +65,41 @@ docker push ${GAR_PATH}:neutral
 
 ---
 
-## Pipeline Variables
+## Stage Variables
 
-The pipeline exposes two runtime variables with defaults:
+All configuration is driven by stage variables with sensible defaults. Override any value at runtime to deploy to a different project, region, or service.
+
+### Deployment
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `artifact_version` | Image tag to deploy — one of `neutral`, `blue`, `green` | `neutral` |
+| `artifact_version` | Image tag to deploy | `neutral` (select from `neutral`, `blue`, `green`) |
 | `primary_artifact` | Artifact source identifier | `artifact_gcr` |
+| `service_name` | Cloud Run service name | `gcrdemodev` |
 
-When running the pipeline, set `artifact_version` to the desired image tag.
+### GCP
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `gcp_project` | GCP project ID | `<YOUR_GCP_PROJECT>` |
+| `gcp_region` | GCP region for Cloud Run | `<YOUR_REGION>` |
+
+### Connectors
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `docker_connector` | Docker registry connector for plugin images | `account.harnessImage` |
+| `k8s_connector` | Kubernetes connector for step group infrastructure | `org.<YOUR_K8S_CONNECTOR>` |
+| `gcp_connector` | GCP connector for artifact registry and infrastructure | `account.<YOUR_GCP_CONNECTOR>` |
+| `github_connector` | GitHub connector for manifest repo | `<YOUR_GITHUB_CONNECTOR>` |
+
+### Public Access
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `invoker_iam_disabled` | Controls the `run.googleapis.com/invoker-iam-disabled` annotation | `true` |
+
+Set to `false` on the **first deploy** of a new service (before public access is configured). Set to `true` (default) for all subsequent deploys after enabling public access. See [Allowing Public Access](#allowing-public-access) for details.
 
 ---
 
@@ -122,17 +147,6 @@ On failure at any point, the pipeline automatically triggers a **rollback** to t
 
 ---
 
-## Connectors
-
-| Purpose | Connector | Type |
-|---------|-----------|------|
-| Plugin image pull | `account.harnessImage` | Docker Registry |
-| Step group K8s infra | `account.<YOUR_K8S_CONNECTOR>` | Kubernetes |
-| GCP authentication | `account.<YOUR_GCP_CONNECTOR>` | GCP (in infra definition) |
-| Git repo access | `<YOUR_GITHUB_CONNECTOR>` | GitHub |
-
----
-
 ## Cloud Run Manifest
 
 The manifest (`harness-cd-pipeline/manifest.yaml`) defines the Knative service:
@@ -141,11 +155,10 @@ The manifest (`harness-cd-pipeline/manifest.yaml`) defines the Knative service:
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: <YOUR_SERVICE>
-  labels:
-    owner: <YOUR_LABEL>
+  name: <+stage.variables.service_name>
   annotations:
     run.googleapis.com/minScale: '2'
+    run.googleapis.com/invoker-iam-disabled: '<+stage.variables.invoker_iam_disabled>'
 spec:
   template:
     spec:
@@ -155,7 +168,7 @@ spec:
             - containerPort: 8080
 ```
 
-The `<+artifacts.primary.image>` expression is resolved by Harness at runtime to the full GAR image path with the selected tag.
+The `<+stage.variables.*>` expressions are resolved from the stage variables at runtime. The `<+artifacts.primary.image>` expression resolves to the full GAR image path with the selected tag.
 
 ---
 
@@ -190,6 +203,22 @@ gcloud projects add-iam-policy-binding <YOUR_GCP_PROJECT> \
 
 - **When to run**: Once per project, can be run ahead of time before any deploys
 - **Trade-off**: Every Cloud Run service in the project is publicly accessible. No per-service setup needed, but not suitable for projects with services that should remain private.
+
+### The `invoker-iam-disabled` Annotation
+
+The pipeline deploys using `gcloud run services replace`, which is fully declarative. The manifest must match the service's current `run.googleapis.com/invoker-iam-disabled` annotation state, or GCP will attempt to change it, requiring `run.services.setIamPolicy` permission.
+
+The `invoker_iam_disabled` stage variable controls this. Set it to `false` for the first deploy of a new service, then to `true` (default) after enabling public access via Option A or B above.
+
+To avoid toggling the variable entirely, grant `roles/run.admin` to the service account used in the **GCP connector** (the SA that authenticates Harness to GCP):
+
+```bash
+gcloud projects add-iam-policy-binding <YOUR_GCP_PROJECT> \
+  --member="serviceAccount:<YOUR_GCP_CONNECTOR_SA>@<YOUR_GCP_PROJECT>.iam.gserviceaccount.com" \
+  --role="roles/run.admin"
+```
+
+This role includes `run.services.setIamPolicy`, allowing the deploy to freely set the annotation. With this in place, you can hardcode the annotation to `true` in the manifest and remove the stage variable. Note that `roles/editor` does **not** include this permission. Some organizations may require conditions on IAM bindings, check with your security team if the binding is rejected.
 
 ---
 

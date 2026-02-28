@@ -7,7 +7,7 @@ infrastructureDefinition:
   deploymentType: GoogleCloudRun
   type: GoogleCloudRun
   spec:
-    connectorRef: account.GCP_Sales_Admin
+    connectorRef: <+input>
     project: <+input>
     region: <+input>
   allowSimultaneousDeployments: false

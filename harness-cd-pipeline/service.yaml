@@ -23,7 +23,7 @@ service:
           primaryArtifactRef: <+input>
           sources:
             - spec:
-                connectorRef: account.GCP_Sales_Admin
+                connectorRef: <+input>
                 repositoryType: docker
                 project: <+input>
                 region: <+input>
