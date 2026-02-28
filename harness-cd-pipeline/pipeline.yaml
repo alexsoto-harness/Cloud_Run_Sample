@@ -86,7 +86,7 @@ pipeline:
                   name: Cutover Approval
                   identifier: Cutover_Approval
                   spec:
-                    approvalMessage: Test the new revision at https://staging---gcrdemo-980596850008.northamerica-northeast2.run.app before approving cutover to primary.
+                    approvalMessage: approving cutover to primary.
                     includePipelineExecutionHistory: true
                     isAutoRejectEnabled: false
                     approvers:
