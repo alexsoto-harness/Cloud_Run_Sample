@@ -128,17 +128,17 @@ The pipeline implements a blue/green pattern across three phases:
 1. **Download Manifests** — Fetches the Cloud Run manifest from this GitHub repo
 2. **Prepare Rollback Data** — Captures current revision state for rollback and exposes the current production revision name via output variables
 3. **Deploy To Staging** — Deploys the new revision with `skipTrafficShift: true`, keeping 100% traffic on the current (old) revision. The new revision is created but receives 0% traffic.
-4. **Tag New Revision** — A `GoogleCloudRunTrafficShift` step that tags the new revision as `staging` (with 0% traffic) and explicitly keeps the previous revision at 100% with the `primary` tag. The previous revision name is resolved dynamically from the Prepare Rollback Data step's output using the expression:
+4. **Tag New Revision** — A `GoogleCloudRunTrafficShift` step that tags the new revision as `staging` (with 0% traffic) and explicitly keeps the previous revision at 100% with the `primary` tag. The previous revision name is resolved dynamically from the Prepare Rollback Data step's output using a relative execution expression:
    ```
-   <+pipeline.stages.<STAGE_ID>.spec.execution.steps.<STEP_GROUP_ID>.steps.<PREPARE_ROLLBACK_STEP_ID>.GoogleCloudRunPrepareRollbackDataOutcome.revisionMetadata[0].revisionName>
+   <+execution.steps.<STEP_GROUP_ID>.steps.<PREPARE_ROLLBACK_STEP_ID>.GoogleCloudRunPrepareRollbackDataOutcome.revisionMetadata[0].revisionName>
    ```
    This gives the new revision a testable URL (`https://staging---<YOUR_SERVICE>-<PROJECT_NUMBER>.<YOUR_REGION>.run.app`) without receiving any production traffic.
 
-   **First deploy handling:** On the very first deploy of a new service, the Prepare Rollback Data step has no previous revision data, so the expression resolves to `"null"`. A `when` condition on this step skips it when no previous revision exists:
+   **First deploy handling:** On the very first deploy of a new service, the Prepare Rollback Data step has no previous revision data, so the expression resolves to `null`. A `when` condition on this step skips it when no previous revision exists:
    ```yaml
    when:
      stageStatus: Success
-     condition: <expression for revisionMetadata[0].revisionName> != "null"
+     condition: <expression for revisionMetadata[0].revisionName> != null
    ```
    On first deploy, the deploy step detects it's a new service and routes 100% traffic to the new revision automatically, no tagging is needed. On all subsequent deploys, the condition passes and the step runs normally.
 
