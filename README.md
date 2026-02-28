@@ -1,13 +1,14 @@
-# Google Cloud Run Deployment Pipeline
+# Google Cloud Run Blue/Green Deployment Pipeline
 
 ## Overview
 
-This project deploys an nginx-based application to Google Cloud Run using a Harness CD pipeline. It supports multiple page variants (blue, green, neutral) for blue/green deployment demos.
+This project deploys an nginx-based application to Google Cloud Run using a Harness CD pipeline with a **blue/green deployment pattern**. It supports multiple page variants (blue, green, neutral), deploying new revisions at 0% traffic, gating cutover behind an approval step, and shifting traffic only after manual verification.
 
 - **GCP Project**: `<YOUR_GCP_PROJECT>`
 - **Region**: `<YOUR_REGION>`
 - **Artifact Registry**: `<YOUR_REGION>-docker.pkg.dev/<YOUR_GCP_PROJECT>/<YOUR_REGISTRY>/<YOUR_IMAGE>`
 - **Cloud Run Service URL**: `https://<YOUR_SERVICE>-<PROJECT_NUMBER>.<YOUR_REGION>.run.app`
+- **Staging URL pattern**: `https://staging---<YOUR_SERVICE>-<PROJECT_NUMBER>.<YOUR_REGION>.run.app`
 
 ---
 
@@ -77,18 +78,43 @@ When running the pipeline, set `artifact_version` to the desired image tag.
 
 ---
 
-## Pipeline Execution Steps
+## Blue/Green Deployment Flow
 
-The pipeline runs in a single stage (`google_cloud_run_service`) with these steps:
+The pipeline implements a blue/green pattern across three phases:
 
-1. **DownloadManifests** - Fetches the Cloud Run manifest from this GitHub repo
-2. **Prepare Rollback Data** - Captures current revision state for rollback
-3. **Google Cloud Run Deploy** - Deploys the new revision via `gcloud run services replace`
-4. **Traffic Shift** - Routes 100% of traffic to the `LATEST` revision
+### Phase 1: Deploy to Staging (Step Group)
 
-On failure, the pipeline automatically triggers a **rollback** to the previous revision.
+1. **Download Manifests** — Fetches the Cloud Run manifest from this GitHub repo
+2. **Prepare Rollback Data** — Captures current revision state for rollback and exposes the current production revision name via output variables
+3. **Deploy To Staging** — Deploys the new revision with `skipTrafficShift: true`, keeping 100% traffic on the current (old) revision. The new revision is created but receives 0% traffic.
+4. **Tag New Revision** — A `GoogleCloudRunTrafficShift` step that tags the new revision as `staging` (with 0% traffic) and explicitly keeps the previous revision at 100% with the `primary` tag. The previous revision name is resolved dynamically from the Prepare Rollback Data step's output using the expression:
+   ```
+   <+pipeline.stages.<STAGE_ID>.spec.execution.steps.<STEP_GROUP_ID>.steps.<PREPARE_ROLLBACK_STEP_ID>.GoogleCloudRunPrepareRollbackDataOutcome.revisionMetadata[0].revisionName>
+   ```
+   This gives the new revision a testable URL (`https://staging---<YOUR_SERVICE>-<PROJECT_NUMBER>.<YOUR_REGION>.run.app`) without receiving any production traffic.
 
-### Connectors
+### Phase 2: Approval Gate
+
+5. **Cutover Approval** — A Harness Approval step where the approver can test the new revision at the staging URL before approving the cutover. The pipeline pauses here until approved (timeout: 1 day).
+
+### Phase 3: Traffic Shift (Step Group)
+
+6. **Download Manifests** — Re-fetches the manifest (required because this is a separate step group with its own container)
+7. **Shift Traffic To Primary** — Routes 100% of traffic to the `LATEST` revision and tags it as `primary`. The plugin automatically removes the `staging` tag as part of this step.
+
+On failure at any point, the pipeline automatically triggers a **rollback** to the previous revision.
+
+### Key Plugin Configuration
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| Plugin image | `harness/google-cloud-run-plugin:1.0.6-linux-amd64` | Must be **1.0.6+** for correct `skipTrafficShift` behavior |
+| `skipTrafficShift` | `true` | Pins traffic to the old revision during deploy |
+| `revisionTrafficDetails` | On the Tag New Revision step | Assigns `staging` tag to new revision, keeps `primary` on old |
+
+---
+
+## Connectors
 
 | Purpose | Connector | Type |
 |---------|-----------|------|
@@ -112,6 +138,7 @@ metadata:
     owner: <YOUR_LABEL>
   annotations:
     run.googleapis.com/minScale: '2'
+    run.googleapis.com/invoker-iam-disabled: 'true'
 spec:
   template:
     spec:
@@ -122,6 +149,8 @@ spec:
 ```
 
 The `<+artifacts.primary.image>` expression is resolved by Harness at runtime to the full GAR image path with the selected tag.
+
+The `invoker-iam-disabled` annotation must match the current Cloud Run service state to avoid IAM permission errors when using `gcloud run services replace`.
 
 ---
 
@@ -144,3 +173,4 @@ gcloud run services add-iam-policy-binding <YOUR_SERVICE> \
 - [Harness Google Cloud Run](https://developer.harness.io/docs/continuous-delivery/deploy-srv-diff-platforms/google-cloud-functions/google-cloud-run/)
 - [Harness CD Artifact Sources](https://developer.harness.io/docs/continuous-delivery/x-platform-cd-features/services/artifact-sources/)
 - [Cloud Run Troubleshooting](https://cloud.google.com/run/docs/troubleshooting)
+- [Cloud Run Revision Tags](https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration#tags)
