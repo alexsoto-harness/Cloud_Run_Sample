@@ -113,7 +113,7 @@ pipeline:
                         spec:
                           connectorRef: account.harnessImage
                           revisionTrafficDetails:
-                            - revisionName: primary
+                            - revisionName: LATEST
                               trafficValue: 100
                               tag: primary
                           image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
