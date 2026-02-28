@@ -28,7 +28,7 @@ service:
                 project: sales-209522
                 region: northamerica-northeast2
                 repositoryName: soto-gar
-                package: gcrdemo
+                package: gcrdemodev
                 version: <+input>
               identifier: artifact_gcr
               type: GoogleArtifactRegistry
