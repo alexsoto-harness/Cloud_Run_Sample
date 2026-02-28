@@ -90,7 +90,7 @@ All configuration is driven by stage variables with sensible defaults. Override 
 |----------|-------------|---------|
 | `docker_connector` | Docker registry connector for plugin images | `account.harnessImage` |
 | `k8s_connector` | Kubernetes connector for step group infrastructure | `org.<YOUR_K8S_CONNECTOR>` |
-| `gcp_connector` | GCP connector for artifact registry and infrastructure | `account.<YOUR_GCP_CONNECTOR>` |
+| `gcp_connector` | GCP connector for artifact registry and infrastructure | `org.<YOUR_GCP_CONNECTOR>` |
 | `github_connector` | GitHub connector for manifest repo | `<YOUR_GITHUB_CONNECTOR>` |
 
 ### Git / Repo
