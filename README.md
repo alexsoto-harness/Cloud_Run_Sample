@@ -95,12 +95,12 @@ The pipeline implements a blue/green pattern across three phases:
 
 ### Phase 2: Approval Gate
 
-5. **Cutover Approval** — A Harness Approval step where the approver can test the new revision at the staging URL before approving the cutover. The pipeline pauses here until approved (timeout: 1 day).
+5. **Cutover Approval** — A Harness Approval step where the approver can test the new revision at the staging URL before approving the cutover. The pipeline pauses here until approved.
 
 ### Phase 3: Traffic Shift (Step Group)
 
 6. **Download Manifests** — Re-fetches the manifest (required because this is a separate step group with its own container)
-7. **Shift Traffic To Primary** — Routes 100% of traffic to the `LATEST` revision and tags it as `primary`. The plugin automatically removes the `staging` tag as part of this step.
+7. **Shift Traffic To Primary** — Routes 100% of traffic to the `LATEST` revision and tags it as `primary`. The `staging` tag is automaticallyremoved as part of this step.
 
 On failure at any point, the pipeline automatically triggers a **rollback** to the previous revision.
 
@@ -138,7 +138,6 @@ metadata:
     owner: <YOUR_LABEL>
   annotations:
     run.googleapis.com/minScale: '2'
-    run.googleapis.com/invoker-iam-disabled: 'true'
 spec:
   template:
     spec:
@@ -150,13 +149,17 @@ spec:
 
 The `<+artifacts.primary.image>` expression is resolved by Harness at runtime to the full GAR image path with the selected tag.
 
-The `invoker-iam-disabled` annotation must match the current Cloud Run service state to avoid IAM permission errors when using `gcloud run services replace`.
+**Do not** include the `run.googleapis.com/invoker-iam-disabled` annotation in the manifest. Setting it during service creation requires `run.services.setIamPolicy` permission, which most service accounts don't have. Once public access is configured via IAM (see below), Cloud Run sets this annotation automatically and preserves it across subsequent deploys.
 
 ---
 
 ## Allowing Public Access
 
-Cloud Run services require authentication by default. To allow unauthenticated access:
+Cloud Run services require authentication by default. There are two ways to allow unauthenticated access, depending on your needs.
+
+### Option A: Per-Service (recommended for production)
+
+Run this **after the first deploy** of each new service. The service must already exist.
 
 ```bash
 gcloud run services add-iam-policy-binding <YOUR_SERVICE> \
@@ -165,6 +168,22 @@ gcloud run services add-iam-policy-binding <YOUR_SERVICE> \
   --member="allUsers" \
   --role="roles/run.invoker"
 ```
+
+- **When to run**: Once per service, after the first successful deploy
+- **Trade-off**: You control exactly which services are public. Requires a manual step after each new service is created.
+
+### Option B: Project-Wide (convenient for sandbox/demo)
+
+Run this **once, at any time** — even before any services exist. All current and future Cloud Run services in the project become publicly accessible.
+
+```bash
+gcloud projects add-iam-policy-binding <YOUR_GCP_PROJECT> \
+  --member="allUsers" \
+  --role="roles/run.invoker"
+```
+
+- **When to run**: Once per project, can be run ahead of time before any deploys
+- **Trade-off**: Every Cloud Run service in the project is publicly accessible. No per-service setup needed, but not suitable for projects with services that should remain private.
 
 ---
 
