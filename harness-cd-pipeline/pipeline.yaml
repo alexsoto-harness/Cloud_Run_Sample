@@ -47,9 +47,15 @@ pipeline:
               - stepGroup:
                   steps:
                     - step:
+                        type: DownloadManifests
+                        name: Download Manifests
+                        identifier: DownloadManifests
+                        spec: {}
+                        timeout: 10m
+                    - step:
                         type: Run
-                        name: Run_1
-                        identifier: Run_1
+                        name: Patch Manifest Traffic
+                        identifier: Patch_Manifest_Traffic
                         spec:
                           connectorRef: account.harnessImage
                           image: google/cloud-sdk:alpine
@@ -57,13 +63,26 @@ pipeline:
                           command: |-
                             echo '<+secrets.getValue("account.GCP_Sales_Admin")>' > /tmp/sa-key.json
                             gcloud auth activate-service-account --key-file=/tmp/sa-key.json
-                            gcloud run services list --region=northamerica-northeast2 --project=sales-209522
-                    - step:
-                        type: DownloadManifests
-                        name: Download Manifests
-                        identifier: DownloadManifests
-                        spec: {}
-                        timeout: 10m
+
+                            # Get the current revision serving traffic
+                            CURRENT_REV=$(gcloud run services describe gcrdemo \
+                              --region=northamerica-northeast2 \
+                              --project=sales-209522 \
+                              --format='value(status.traffic[0].revisionName)')
+                            echo "Current serving revision: $CURRENT_REV"
+
+                            # Find the manifest file
+                            MANIFEST=$(find /harness -name 'manifest.yaml' | head -1)
+                            echo "Manifest path: $MANIFEST"
+                            echo "--- Before patching ---"
+                            cat "$MANIFEST"
+
+                            # Remove any existing traffic section and append the correct one
+                            sed -i '/^  traffic:/,$d' "$MANIFEST"
+                            printf '  traffic:\n  - revisionName: %s\n    percent: 100\n  - latestRevision: true\n    percent: 0\n    tag: staging\n' "$CURRENT_REV" >> "$MANIFEST"
+
+                            echo "--- After patching ---"
+                            cat "$MANIFEST"
                     - step:
                         type: GoogleCloudRunPrepareRollbackData
                         name: Prepare Rollback Data
