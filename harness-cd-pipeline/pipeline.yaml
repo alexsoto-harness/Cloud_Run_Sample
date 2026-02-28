@@ -82,6 +82,8 @@ pipeline:
                           image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           imagePullPolicy: Always
                           skipTrafficShift: false
+                          envVariables:
+                            PLUGIN_CLOUD_RUN_SKIP_TRAFFIC_UPDATE: "true"
                         timeout: 10m
                   name: Cloud Run Deploy to Staging
                   identifier: Google_Cloud_Run_Step_Group
