@@ -4,6 +4,17 @@ pipeline:
   tags: {}
   projectIdentifier: soto_sandbox
   orgIdentifier: sandbox
+  variables:
+    - name: artifact_version
+      type: String
+      description: Artifact version to deploy
+      required: true
+      value: <+input>.default(v1)
+    - name: primary_artifact
+      type: String
+      description: Primary artifact identifier
+      required: true
+      value: <+input>.default(artifact_gcr)
   stages:
     - stage:
         name: google_cloud_run_service
@@ -20,8 +31,12 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: <+input>
-                      sources: <+input>
+                      primaryArtifactRef: <+pipeline.variables.primary_artifact>
+                      sources:
+                        - identifier: artifact_gcr
+                          type: GoogleArtifactRegistry
+                          spec:
+                            version: <+pipeline.variables.artifact_version>
           environment:
             environmentRef: gcr_test
             deployToAll: false

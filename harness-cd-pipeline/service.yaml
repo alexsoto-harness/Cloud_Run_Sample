@@ -13,7 +13,7 @@ service:
                 type: Github
                 spec:
                   connectorRef: alexsotoharness
-                  repoName: alexsoto-harness/Cloud_Run_Sample
+                  repoName: Cloud_Run_Sample
                   gitFetchType: Branch
                   branch: main
                   paths:
