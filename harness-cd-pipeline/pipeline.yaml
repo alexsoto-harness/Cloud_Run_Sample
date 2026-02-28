@@ -9,7 +9,7 @@ pipeline:
       type: String
       description: Artifact version to deploy
       required: true
-      value: <+input>.default(v2)
+      value: <+input>.default(neutral).selectOneFrom(neutral,blue,green)
     - name: primary_artifact
       type: String
       description: Primary artifact identifier
@@ -50,9 +50,7 @@ pipeline:
                         type: DownloadManifests
                         name: DownloadManifests
                         identifier: DownloadManifests
-                        spec:
-                          delegateSelectors:
-                            - se-sandbox-org-delegate
+                        spec: {}
                         timeout: 10m
                     - step:
                         type: GoogleCloudRunPrepareRollbackData
@@ -62,8 +60,6 @@ pipeline:
                           connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           imagePullPolicy: Always
-                          delegateSelectors:
-                            - se-sandbox-org-delegate
                         timeout: 10m
                     - step:
                         type: GoogleCloudRunDeploy
@@ -73,8 +69,6 @@ pipeline:
                           connectorRef: account.harnessImage
                           image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
                           imagePullPolicy: Always
-                          delegateSelectors:
-                            - se-sandbox-org-delegate
                         timeout: 10m
                     - step:
                         type: GoogleCloudRunTrafficShift
@@ -86,8 +80,6 @@ pipeline:
                             - revisionName: LATEST
                               trafficValue: 100
                           image: harness/google-cloud-run-plugin:1.0.4-linux-amd64
-                          delegateSelectors:
-                            - se-sandbox-org-delegate
                         timeout: 10m
                   name: Google Cloud Run Step Group
                   identifier: Google_Cloud_Run_Step_Group
